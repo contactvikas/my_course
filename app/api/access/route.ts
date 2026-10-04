@@ -7,12 +7,17 @@ import { admin, getUser } from "@/lib/server";
 export async function POST(req: Request) {
   const user = await getUser(req);
   if (!user) return Response.json({ error: "Login required" }, { status: 401 });
-  const { courseId, deviceId, claim } = await req.json();
+  const { courseId, deviceId, claim, lessonId } = await req.json();
   const db = admin();
 
   const { data: bought } = await db.from("purchases").select("course_id")
     .eq("user_id", user.id).eq("course_id", courseId).maybeSingle();
-  if (!bought) return Response.json({ error: "Not purchased" }, { status: 403 });
+
+  const freeLesson = courseId === "demo"
+    ? lessonId === "demo-lesson-1"
+    : lessonId === "lesson-1";
+  const isUnlocked = Boolean(bought) || freeLesson;
+  if (!isUnlocked) return Response.json({ error: "Not purchased" }, { status: 403 });
 
   const { data: dev } = await db.from("devices").select("device_id").eq("user_id", user.id).maybeSingle();
   if (claim || !dev) {
@@ -25,12 +30,10 @@ export async function POST(req: Request) {
   const label = user.email || user.phone || user.id;
   const { CLOUDFRONT_DOMAIN: domain, CLOUDFRONT_KEY_PAIR_ID: keyPairId, CLOUDFRONT_PRIVATE_KEY: pk } = process.env;
 
-  // Demo fallback until CloudFront is ready
   if (!domain || !keyPairId || !pk) {
     return Response.json({ src: process.env.DEMO_STREAM_URL, query: "", label });
   }
 
-  // One signature (custom policy, wildcard) covers the playlist and every segment of this course.
   const folder = course.video_path.split("/").slice(0, -1).join("/");
   const expires = Math.floor(Date.now() / 1000) + 60 * 60 * 3;
   const policy = JSON.stringify({

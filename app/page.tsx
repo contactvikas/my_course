@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -41,25 +42,30 @@ export default function Home() {
           <a className="yellow" href="#courses">EXPLORE MORE</a>
         </div>
       </section>
+      <section className="wrap" id="courses">
+        <h2 className="title">Our Current Courses</h2>
+        <div className="grid3">
+          {courses.map((c) => (
+            <div key={c.id} className="card course-card">
+              <Link href={`/course/${c.id}`} className="course-card__link">
+                <div className="thumb">{c.title}</div>
+                <h3>{c.title}</h3>
+                <p className="muted">{c.description}</p>
+                <p className="course-price"><b>₹{c.price_inr}</b></p>
+              </Link>
+              <div className="course-card__actions">
+                <Link className="yellow" href={`/course/${c.id}`}>VIEW COURSE</Link>
+                <button className="outline" onClick={() => enroll(c.id)}>{session ? "ENROLL" : "KNOW MORE"}</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
       <section className="wrap">
         <h2 className="title">Why choose us</h2>
         <div className="grid3">
           {features.map(([t, d, c]) => (
             <div key={t} className="feat" style={{ background: c }}><b>{t}</b><p>{d}</p></div>
-          ))}
-        </div>
-      </section>
-      <section className="wrap" id="courses">
-        <h2 className="title">Our Current Courses</h2>
-        <div className="grid3">
-          {courses.map((c) => (
-            <div key={c.id} className="card">
-              <div className="thumb">{c.title}</div>
-              <h3>{c.title}</h3>
-              <p className="muted">{c.description}</p>
-              <p><b>₹{c.price_inr}</b></p>
-              <button className="yellow" onClick={() => enroll(c.id)}>{session ? "ENROLL (DEMO)" : "KNOW MORE"}</button>
-            </div>
           ))}
         </div>
       </section>

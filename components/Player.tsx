@@ -2,27 +2,34 @@
 import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 
-type Props = { src: string; query: string; label: string };
+type Props = { src: string; query: string; label: string; autoPlay?: boolean };
 
-export default function Player({ src, query, label }: Props) {
+export default function Player({ src, query, label, autoPlay = false }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const [pos, setPos] = useState({ top: 12, left: 12 });
 
   useEffect(() => {
     const v = video.current!;
+    const playWhenReady = () => {
+      if (autoPlay) void v.play().catch(() => {});
+    };
+
     if (Hls.isSupported()) {
       const hls = new Hls({
         xhrSetup: (xhr, url) => {
           xhr.open("GET", query ? url + (url.includes("?") ? "&" : "?") + query : url, true);
         },
       });
+      if (autoPlay) hls.on(Hls.Events.MANIFEST_PARSED, playWhenReady);
       hls.loadSource(src);
       hls.attachMedia(v);
       return () => hls.destroy();
     }
     v.src = src; // Safari native HLS (demo stream only; signed CloudFront needs hls.js path)
-  }, [src, query]);
+    if (autoPlay) v.addEventListener("canplay", playWhenReady, { once: true });
+    return () => v.removeEventListener("canplay", playWhenReady);
+  }, [src, query, autoPlay]);
 
   // Moving watermark
   useEffect(() => {
@@ -42,7 +49,7 @@ export default function Player({ src, query, label }: Props) {
 
   return (
     <div ref={wrap} className="player" onContextMenu={(e) => e.preventDefault()}>
-      <video ref={video} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline />
+      <video ref={video} autoPlay={autoPlay} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline />
       <span data-wm style={{ top: `${pos.top}%`, left: `${pos.left}%` }}>{label}</span>
     </div>
   );

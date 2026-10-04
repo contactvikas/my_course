@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Home } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
 import { BRAND } from "@/lib/brand";
 
-const side = ["Courses", "Webinars", "Membership", "AI Avatar", "Bookmarks", "Community"];
+const side = ["Courses"];
 
 export default function Dashboard() {
   const { session, ready } = useSession();
@@ -29,7 +30,12 @@ export default function Dashboard() {
         <div className="me"><b>{name}</b><span>Student</span></div>
       </aside>
       <main>
-        <h1>Active Courses</h1>
+        <div className="dashboard-heading">
+          <h1>Active Courses</h1>
+          <Link href="/" className="dashboard-home-link" aria-label="Back to Home">
+            <Home size={20} strokeWidth={2.5} aria-hidden="true" />
+          </Link>
+        </div>
         <div className="grid3">
           {rows.map((r) => (
             <Link key={r.courses.id} href={`/course/${r.courses.id}`} className="card">
